@@ -44,6 +44,8 @@ function VueReCaptcha(Vue, options) {
     var recaptchaError = null;
     var loadedWaiters = [];
     Vue.prototype.$recaptchaLoaded = function () { return new Promise(function (resolve, reject) {
+        console.log('recaptchaError :>> ', recaptchaError);
+        console.log('recaptchaLoaded :>> ', recaptchaLoaded);
         if (recaptchaError !== null) {
             return reject(recaptchaError);
         }
@@ -51,22 +53,26 @@ function VueReCaptcha(Vue, options) {
             return resolve(true);
         }
         loadedWaiters.push({ resolve: resolve, reject: reject });
+        return resolve(false);
     }); };
-    Vue.prototype.$initializeReCaptcha = function () {
-        plugin.initializeReCaptcha(options).then(function (wrapper) {
-            recaptchaLoaded = true;
-            Vue.prototype.$recaptcha = function (action) { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    return [2, wrapper.execute(action)];
-                });
-            }); };
-            Vue.prototype.$recaptchaInstance = wrapper;
-            loadedWaiters.forEach(function (v) { return v.resolve(true); });
-        }).catch(function (error) {
-            recaptchaError = error;
-            loadedWaiters.forEach(function (v) { return v.reject(error); });
+    Vue.prototype.$initializeReCaptchaV3 = function () { return __awaiter(_this, void 0, void 0, function () {
+        var _this = this;
+        return __generator(this, function (_a) {
+            return [2, plugin.initializeReCaptcha(options).then(function (wrapper) {
+                    recaptchaLoaded = true;
+                    Vue.prototype.$recaptcha = function (action) { return __awaiter(_this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            return [2, wrapper.execute(action)];
+                        });
+                    }); };
+                    Vue.prototype.$recaptchaInstance = wrapper;
+                    loadedWaiters.forEach(function (v) { return v.resolve(true); });
+                }).catch(function (error) {
+                    recaptchaError = error;
+                    loadedWaiters.forEach(function (v) { return v.reject(error); });
+                })];
         });
-    };
+    }); };
 }
 exports.VueReCaptcha = VueReCaptcha;
 var ReCaptchaVuePlugin = (function () {

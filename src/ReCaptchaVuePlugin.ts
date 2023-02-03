@@ -18,10 +18,13 @@ export function VueReCaptcha (Vue: typeof _Vue, options: IReCaptchaOptions): voi
       return resolve(true)
     }
     loadedWaiters.push({ resolve, reject })
+
+    return resolve(false)
   })
 
-  Vue.prototype.$initializeReCaptchaV3 = () => {
-    plugin.initializeReCaptcha(options).then((wrapper) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  Vue.prototype.$initializeReCaptchaV3 = async () => {
+    return plugin.initializeReCaptcha(options).then((wrapper) => {
       recaptchaLoaded = true
       Vue.prototype.$recaptcha = async (action: string): Promise<string> => {
         return wrapper.execute(action)
