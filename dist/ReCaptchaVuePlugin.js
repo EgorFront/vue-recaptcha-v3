@@ -44,8 +44,6 @@ function VueReCaptcha(Vue, options) {
     var recaptchaError = null;
     var loadedWaiters = [];
     Vue.prototype.$recaptchaLoaded = function () { return new Promise(function (resolve, reject) {
-        console.log('recaptchaError :>> ', recaptchaError);
-        console.log('recaptchaLoaded :>> ', recaptchaLoaded);
         if (recaptchaError !== null) {
             return reject(recaptchaError);
         }
