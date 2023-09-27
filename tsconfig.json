@@ -3,10 +3,11 @@
     "outDir": "./dist/",
     "noImplicitAny": true,
     "moduleResolution": "node",
-    "module": "commonjs",
+    "module": "ES6",
     "target": "es5",
     "declaration": true,
     "removeComments": true,
+    "skipLibCheck": true,
     "lib": [
       "esnext",
       "dom"

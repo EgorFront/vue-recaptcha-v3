@@ -5,39 +5,27 @@ import { IReCaptchaOptions } from './IReCaptchaOptions'
 const VueReCaptchaInjectKey: InjectionKey<IReCaptchaComposition> = Symbol('VueReCaptchaInjectKey')
 
 interface IGlobalConfig {
-  loadedWaiters: Array<({resolve: (resolve: boolean) => void, reject: (reject: Error) => void})>
   error: Error | null
 }
 const globalConfig: IGlobalConfig = {
-  loadedWaiters: [],
   error: null
 }
 
-export const VueReCaptcha = {
-  install (app: App, options: IReCaptchaOptions) {
-    const isLoaded = ref(false)
-    const instance: Ref<ReCaptchaInstance | undefined> = ref(undefined)
+const isLoaded = ref(false)
+const instance: Ref<ReCaptchaInstance | undefined> = ref(undefined)
 
+export const VueReCaptcha = {
+  install (app: App<Element>, options: IReCaptchaOptions) {
     app.config.globalProperties.$recaptchaLoaded = recaptchaLoaded(isLoaded)
 
-    initializeReCaptcha(options).then((wrapper) => {
-      isLoaded.value = true
-      instance.value = wrapper
-
-      app.config.globalProperties.$recaptcha = recaptcha(instance)
-      app.config.globalProperties.$recaptchaInstance = instance
-
-      globalConfig.loadedWaiters.forEach((v) => v.resolve(true))
-    }).catch((error) => {
-      globalConfig.error = error
-      globalConfig.loadedWaiters.forEach((v) => v.reject(error))
-    })
+    if (options.instantLoading) void deferLoading(app, options)
 
     app.provide(VueReCaptchaInjectKey, {
       instance,
       isLoaded,
       executeRecaptcha: recaptcha(instance),
-      recaptchaLoaded: recaptchaLoaded(isLoaded)
+      recaptchaLoaded: recaptchaLoaded(isLoaded),
+      deferLoading: async () => await deferLoading(app, options)
     })
   }
 }
@@ -46,7 +34,24 @@ export function useReCaptcha (): IReCaptchaComposition | undefined {
   return inject(VueReCaptchaInjectKey)
 }
 
+async function deferLoading (app: App<Element>, options: IReCaptchaOptions): Promise<void> {
+  try {
+    const wrapper = await initializeReCaptcha(options)
+
+    isLoaded.value = true
+    instance.value = wrapper
+
+    app.config.globalProperties.$recaptcha = recaptcha(instance)
+    app.config.globalProperties.$recaptchaInstance = instance
+  } catch (error) {
+    globalConfig.error = error
+  }
+}
+
 async function initializeReCaptcha (options: IReCaptchaOptions): Promise<ReCaptchaInstance> {
+  console.log('Load ReCaptcha with options:')
+  console.log(options)
+  console.log(window.navigator.language)
   return await loadReCaptcha(options.siteKey, options.loaderOptions)
 }
 
@@ -56,10 +61,8 @@ function recaptchaLoaded (isLoaded: Ref<boolean>) {
     if (globalConfig.error !== null) {
       return reject(globalConfig.error)
     }
-    if (isLoaded.value) {
-      return resolve(true)
-    }
-    globalConfig.loadedWaiters.push({ resolve, reject })
+
+    return resolve(isLoaded.value)
   })
 }
 
@@ -74,4 +77,5 @@ export interface IReCaptchaComposition {
   instance: Ref<ReCaptchaInstance | undefined>
   executeRecaptcha: (action: string) => Promise<string>
   recaptchaLoaded: () => Promise<boolean>
+  deferLoading: () => Promise<void>
 }
