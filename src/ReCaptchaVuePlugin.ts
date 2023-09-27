@@ -49,9 +49,6 @@ async function deferLoading (app: App<Element>, options: IReCaptchaOptions): Pro
 }
 
 async function initializeReCaptcha (options: IReCaptchaOptions): Promise<ReCaptchaInstance> {
-  console.log('Load ReCaptcha with options:')
-  console.log(options)
-  console.log(window.navigator.language)
   return await loadReCaptcha(options.siteKey, options.loaderOptions)
 }
 
